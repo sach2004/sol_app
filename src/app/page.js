@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import Navbar from "../../components/Navbar";
+import LoadingScreen from "../../components/LoadingScreen";
 
 export default function Home() {
     const wallet = useWallet();
@@ -13,12 +14,14 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
     const [activeTab, setActiveTab] = useState("airdrop");
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         setMounted(true);
+        setTimeout(() => setPageLoading(false), 300);
     }, []);
 
-    if (!mounted) return null;
+    if (!mounted || pageLoading) return <LoadingScreen />;
 
     async function requestSol() {
         setMessage({ type: "", text: "" });
@@ -47,7 +50,12 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-white">
-            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Navbar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isLoading={pageLoading}
+                setIsLoading={setPageLoading}
+            />
 
             <main className="flex-1 flex items-center justify-center px-4 py-12 min-h-[calc(100vh-4rem)]">
                 {activeTab === "airdrop" && (

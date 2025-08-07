@@ -8,19 +8,15 @@ import {
     Transaction,
     SystemProgram,
     LAMPORTS_PER_SOL,
-    Keypair
 } from "@solana/web3.js";
 import {
     TOKEN_PROGRAM_ID,
-    createTransferInstruction,
     getAssociatedTokenAddress,
-    createAssociatedTokenAccountInstruction,
     getAccount,
-    createWrapSolInstruction,
-    createCloseAccountInstruction,
     NATIVE_MINT
 } from "@solana/spl-token";
 import Navbar from "../../../components/Navbar";
+import LoadingScreen from "../../../components/LoadingScreen";
 
 const DEVNET_TOKENS = [
     {
@@ -51,6 +47,7 @@ export default function DEXPage() {
     const wallet = useWallet();
     const [mounted, setMounted] = useState(false);
     const [activeTab, setActiveTab] = useState("dex");
+    const [pageLoading, setPageLoading] = useState(true);
 
     const [fromToken, setFromToken] = useState(DEVNET_TOKENS[0]);
     const [toToken, setToToken] = useState(DEVNET_TOKENS[1]);
@@ -69,6 +66,7 @@ export default function DEXPage() {
 
     useEffect(() => {
         setMounted(true);
+        setTimeout(() => setPageLoading(false), 300);
     }, []);
 
     const fetchBalances = async () => {
@@ -119,7 +117,7 @@ export default function DEXPage() {
         }
     }, [fromAmount, fromToken, toToken, slippage]);
 
-    if (!mounted) return null;
+    if (!mounted || pageLoading) return <LoadingScreen />;
 
     const createMockQuote = () => {
         const amount = parseFloat(fromAmount);
@@ -408,7 +406,12 @@ export default function DEXPage() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-white">
-            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Navbar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isLoading={pageLoading}
+                setIsLoading={setPageLoading}
+            />
 
             <main className="flex-1 flex items-center justify-center px-4 py-12 min-h-[calc(100vh-4rem)]">
                 <div className="w-full max-w-md">

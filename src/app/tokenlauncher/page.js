@@ -17,6 +17,7 @@ import {
 } from "@solana/spl-token";
 import { createInitializeInstruction, pack } from "@solana/spl-token-metadata";
 import Navbar from "../../../components/Navbar";
+import LoadingScreen from "../../../components/LoadingScreen";
 
 export default function TokenLauncher() {
     const { connection } = useConnection();
@@ -29,12 +30,14 @@ export default function TokenLauncher() {
     const [symbol, setSymbol] = useState("");
     const [imageUrl, setImageUrl] = useState("");
     const [initialSupply, setInitialSupply] = useState("");
+    const [pageLoading, setPageLoading] = useState(true);
 
     useEffect(() => {
         setMounted(true);
+        setTimeout(() => setPageLoading(false), 300);
     }, []);
 
-    if (!mounted) return null;
+    if (!mounted || pageLoading) return <LoadingScreen />;
 
     async function createToken() {
         setMessage({ type: "", text: "" });
@@ -61,7 +64,7 @@ export default function TokenLauncher() {
             const balance = await connection.getBalance(wallet.publicKey);
             console.log(`Wallet balance: ${balance / 1e9} SOL`);
 
-            if (balance < 0.01 * 1e9) { // Less than 0.01 SOL
+            if (balance < 0.01 * 1e9) {
                 setMessage({ type: "error", text: "Insufficient SOL balance. Need at least 0.01 SOL for transaction fees." });
                 return;
             }
@@ -210,7 +213,12 @@ export default function TokenLauncher() {
 
     return (
         <div className="min-h-screen bg-gray-950 text-white">
-            <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />
+            <Navbar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                isLoading={pageLoading}
+                setIsLoading={setPageLoading}
+            />
 
             <main className="flex-1 flex items-center justify-center px-4 py-12 min-h-[calc(100vh-4rem)]">
                 <div className="w-full max-w-md">

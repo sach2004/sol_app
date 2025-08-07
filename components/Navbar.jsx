@@ -2,10 +2,17 @@
 
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 
-export default function Navbar({ activeTab, setActiveTab }) {
+export default function Navbar({ activeTab, setActiveTab, isLoading, setIsLoading }) {
     const router = useRouter();
     const pathname = usePathname();
+    const [navigatingTo, setNavigatingTo] = useState(null);
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const tabs = [
         { id: "airdrop", label: "Airdrop", href: "/" },
@@ -13,12 +20,27 @@ export default function Navbar({ activeTab, setActiveTab }) {
         { id: "dex", label: "DEX", href: "/dex" },
     ];
 
-    const handleTabClick = (tab) => {
-        if (tab.href === "#") {
-            setActiveTab?.(tab.id);
-        } else {
-            router.push(tab.href);
-            setActiveTab?.(tab.id);
+    const handleTabClick = async (tab) => {
+        if (getCurrentTab() === tab.id || isLoading) return;
+
+        try {
+            setNavigatingTo(tab.id);
+            setIsLoading?.(true);
+
+            if (tab.href === "#") {
+                setActiveTab?.(tab.id);
+            } else {
+                await new Promise(resolve => setTimeout(resolve, 100));
+                router.push(tab.href);
+                setActiveTab?.(tab.id);
+            }
+        } catch (error) {
+            console.error("Navigation error:", error);
+        } finally {
+            setTimeout(() => {
+                setIsLoading?.(false);
+                setNavigatingTo(null);
+            }, 500);
         }
     };
 
@@ -47,19 +69,32 @@ export default function Navbar({ activeTab, setActiveTab }) {
                             <button
                                 key={tab.id}
                                 onClick={() => handleTabClick(tab)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                disabled={isLoading}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative ${
                                     currentActiveTab === tab.id
                                         ? "bg-purple-600 text-white shadow-lg"
                                         : "text-gray-300 hover:text-white hover:bg-gray-800"
-                                }`}
+                                } ${isLoading ? "cursor-not-allowed opacity-50" : ""}
+                                ${navigatingTo === tab.id ? "opacity-75" : ""}`}
                             >
-                                {tab.label}
+                                <span className={navigatingTo === tab.id ? "opacity-0" : ""}>
+                                    {tab.label}
+                                </span>
+                                {navigatingTo === tab.id && (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    </div>
+                                )}
                             </button>
                         ))}
                     </div>
 
                     <div className="flex items-center">
-                        <WalletMultiButton className="!bg-gradient-to-r !from-purple-600 !to-pink-600 hover:!from-purple-700 hover:!to-pink-700 !rounded-lg !font-medium !text-sm !py-2 !px-4 !transition-all !duration-200" />
+                        {mounted ? (
+                            <WalletMultiButton className="!bg-gradient-to-r !from-purple-600 !to-pink-600 hover:!from-purple-700 hover:!to-pink-700 !rounded-lg !font-medium !text-sm !py-2 !px-4 !transition-all !duration-200" />
+                        ) : (
+                            <div className="w-32 h-8 bg-gradient-to-r from-purple-600/50 to-pink-600/50 rounded-lg animate-pulse" />
+                        )}
                     </div>
                 </div>
             </div>
