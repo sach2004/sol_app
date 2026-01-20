@@ -16,7 +16,7 @@
     "@solana/wallet-adapter-react-ui": "^0.9.35",
     "@solana/wallet-adapter-wallets": "^0.19.32",
     "@solana/web3.js": "^1.95.3",
-    "next": "15.4.5",
+    "next": "15.4.10",
     "node-polyfill-webpack-plugin": "^4.1.0",
     "react": "19.1.0",
     "react-dom": "19.1.0"
